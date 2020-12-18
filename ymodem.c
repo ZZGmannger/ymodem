@@ -176,7 +176,6 @@ static void ym_session_set_state(ym_session_t *session, SESSION_STATUS_t state)
     ym_session_timeout_evt_start(session, timeout);
     session->state = state;
 }
-
 /**=====================================================================================
   * @brief  ym_session_fsm
   * @param  session: point to a static session
@@ -209,6 +208,12 @@ static void ym_session_fsm(ym_session_t *session, SESSION_EVT_t evt)
 
                 session->file.size = atoi((char *)(session->buf + 3 + file_name_len + 1));
                 session->file.recvd_size = 0;
+				 
+				if (session->rx_cb != NULL)
+                {
+                    session->rx_cb(session,sizeof(ym_session_t),YM_FILE_START);
+                }
+				
                 YM_LOG("file: %s ,byte : %d", session->file.name, session->file.size);
 
                 ym_session_set_state(session, SE_STATUS_RECIEVING_DATA);
@@ -258,7 +263,7 @@ static void ym_session_fsm(ym_session_t *session, SESSION_EVT_t evt)
                 }
                 if ((session->rx_cb != NULL) && (session->buf_len == SOH_PACKET_LEN || session->buf_len == STX_PACKET_LEN))
                 {
-                    session->rx_cb(session->buf + 3, session->buf_len - 5 - pad_size);
+                    session->rx_cb(session->buf + 3, session->buf_len - 5 - pad_size,YM_FILE_RECV);
                 }
                 session->tx(ACK);
             }
@@ -285,6 +290,11 @@ static void ym_session_fsm(ym_session_t *session, SESSION_EVT_t evt)
                 if (session->buf_len == SOH_PACKET_LEN || session->buf[0] == YMD)
                 {
                     session->tx(ACK);
+					
+					if (session->rx_cb != NULL)
+					{
+						session->rx_cb(session,sizeof(ym_session_t),YM_FILE_DONE);
+					}
                     ym_session_set_state(session, SE_STATUS_IDLE);
                 }
                 else

@@ -1,5 +1,5 @@
-#ifndef __YMODEM_H
-#define __TMODEM_H
+#ifndef __YMODEM__H
+#define __YMODEM__H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,14 +11,20 @@
 #define SOH_PACKET_LEN   (1+2+128+2)
 #define STX_PACKET_LEN   (1+2+1024+2)
 
-#define YM_LOG   printf
+#define YM_LOG(...)   //printf
 
 #define SESSION_MAX_EVT 8
 #define FILE_NAME_MAX  (24)
 
+typedef enum
+{
+	YM_FILE_START,
+	YM_FILE_RECV,
+	YM_FILE_DONE
+}YM_CB_EVT_t;
 
 
-typedef void (*session_rx_callback)(uint8_t* buf , uint16_t len);
+typedef void (*session_rx_callback)(void* buf , uint16_t len ,YM_CB_EVT_t evt);
 typedef void (*session_tx)(uint8_t data);
 
 typedef struct 
@@ -66,4 +72,8 @@ void ym_session_evt_dispatch(void);
 
 void ym_session_parser_byte(ym_session_t *session , uint8_t data);
 void ym_parser_frame(ym_session_t *session , uint8_t* buf ,uint16_t len);
+
+
+
 #endif
+
